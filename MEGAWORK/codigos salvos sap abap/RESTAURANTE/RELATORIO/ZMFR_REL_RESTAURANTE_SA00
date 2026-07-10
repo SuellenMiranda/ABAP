@@ -1,0 +1,57 @@
+*&---------------------------------------------------------------------*
+*& Report ZMFR__REL_CLIENTES_SA00
+*&---------------------------------------------------------------------*
+*        MEGAWORK  - Relatório de Clientes
+*----------------------------------------------------------------------*
+* Autor......: Suellen Miranda Amorim                                  *
+* Data.......: 25/02/2025                                              *
+* Descrição  : Relatório para apuração da base de Clientes             *
+* Transação..: ZXXXXXX                                                 *
+*----------------------------------------------------------------------*
+*                      Histórico das modificaçãos                      *
+*----------------------------------------------------------------------*
+* Data        | Nome        | Request     | Descrição                  *
+*----------------------------------------------------------------------*
+* 25/02/2025  | SUELLEN     |             | DESENVOLVIMENTO inicial    *
+*----------------------------------------------------------------------*
+*Informações adicionais de regras da implementação                     *
+*----------------------------------------------------------------------*
+
+REPORT zmfr_rel_clientes_sa00.
+
+
+INCLUDE zmfr_rel_clientes_sa00_top. " Declaração de Variáveis
+INCLUDE zmfr_rel_clientes_sa00_src. " Screen Fields
+INCLUDE zmfr_rel_clientes_sa00_f01. " Forms (Rotinas de Execução)
+
+
+*----------------------------------------------------------------------*
+* AT SELECTION-CREEN                                                   *
+*----------------------------------------------------------------------*
+"AT SELECTON-SCREEN OUTPUT.
+
+*----------------------------------------------------------------------*
+* AT SELECTION-CREEN ON VALUE-REQUEST                                  *
+*----------------------------------------------------------------------*
+"AT SELECTION-SCREEN ON VALUE FOR p_file.
+
+
+
+*----------------------------------------------------------------------*
+* INICIALIZATION                                                       *
+*----------------------------------------------------------------------*
+
+
+
+*----------------------------------------------------------------------*
+* START-OF-SELECTION(Comando)                                          *
+*----------------------------------------------------------------------*
+" NO ATO DE F8
+"PERFORM f_seleciona_Cliente.
+"PERFORM f_monte_gride.
+"PERFORM f_mostre_valores.
+
+START-OF-SELECTION.
+  PERFORM f_select_clientes.
+  PERFORM f_create_fcat. "Configurações da nossa saida
+  PERFORM f_display_alvl. "Chamar a saida de dados

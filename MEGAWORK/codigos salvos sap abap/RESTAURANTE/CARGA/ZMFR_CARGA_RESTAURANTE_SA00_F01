@@ -1,0 +1,245 @@
+*&---------------------------------------------------------------------*
+*& Include          ZMFR_CARGA_CLIENTES_SA00_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form open_file
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM open_file .
+
+  DATA: lv_rc   TYPE i,
+        lt_file TYPE filetable.
+
+  cl_gui_frontend_services=>file_open_dialog(
+  EXPORTING
+    window_title            = 'Selecione o diretório'
+    default_extension       = '*'
+  CHANGING
+    file_table              = lt_file
+    rc                      = lv_rc
+  EXCEPTIONS
+    file_open_dialog_failed = 1
+    cntl_error              = 2
+    error_no_gui            = 3
+    not_supported_by_gui    = 4
+    OTHERS                  = 5      ).
+
+  TRY.
+      p_file = CONV #( lt_file[ 1 ]-filename ).
+    CATCH cx_sy_itab_line_not_found.
+  ENDTRY.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form get_file
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_file .
+
+  DATA: lt_table    TYPE truxs_t_text_data,
+        ls_template LIKE LINE OF gt_template,
+        lv_aux      TYPE string.
+
+  "// Arquivo válido: CSV separado por ,
+  cl_gui_frontend_services=>gui_upload(
+    EXPORTING
+      filename                = CONV #( p_file )
+    CHANGING
+     data_tab                = lt_table
+    EXCEPTIONS
+      file_open_error         = 1
+      file_read_error         = 2
+      no_batch                = 3
+      gui_refuse_filetransfer = 4
+      invalid_type            = 5
+      no_authority            = 6
+      unknown_error           = 7
+      bad_data_format         = 8
+      header_not_allowed      = 9
+      separator_not_allowed   = 10
+      header_too_long         = 11
+      unknown_dp_error        = 12
+      access_denied           = 13
+      dp_out_of_memory        = 14
+      disk_full               = 15
+      dp_timeout              = 16
+      not_supported_by_gui    = 17
+      error_no_gui            = 18
+      OTHERS                  = 19
+  ).
+
+*** Mensagem genérica do Sistema ( Para chamada que não retorna tabelas de mensagem )
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ENDIF.
+
+  DELETE lt_table INDEX 1. "// Deletar linha de cabelo
+
+  LOOP AT lt_table INTO DATA(ls_line).
+
+    SPLIT ls_line AT ';' INTO ls_template-col_a
+                              ls_template-col_b
+                              ls_template-col_c
+                              ls_template-col_d
+                              ls_template-col_e.
+
+    IF ls_template-col_a IS NOT INITIAL.
+      APPEND ls_template TO gt_template.
+    ENDIF.
+
+  ENDLOOP.
+
+  "// Mensagem de Erro
+  IF lines( gt_template ) IS INITIAL.
+    MESSAGE 'Nenhum registro importado' TYPE 'E'.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form process_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM process_data .
+
+  DATA: ls_cliente LIKE LINE OF gt_cliente.
+
+  LOOP AT gt_template INTO DATA(ls_template).
+
+    " Parte da tabela preenchida externamente
+    ls_cliente-cpf          = |{ ls_template-col_a ALPHA = IN }|.
+    ls_cliente-idcliente    = ls_template-col_b.
+    ls_cliente-nome         = ls_template-col_c.
+    ls_cliente-dtnascimento = |{ ls_template-col_d+6(4) }{ ls_template-col_d+3(2) }{ ls_template-col_d(2) }|.
+    ls_cliente-inativo = COND #( WHEN ls_template-col_e = 'Sim' THEN 'X' ELSE '' ).
+    "Pode -se usar esse: TRANSLATE ls_cliente-inativo TO UPPER CASE.
+
+    " Parte da tsabela preenchida internamente
+    ls_cliente-dtcriacao    = sy-datum.
+    ls_cliente-hrcriacao    = sy-uzeit.
+    ls_cliente-usrcriacao   = sy-uname.
+
+    APPEND ls_cliente TO gt_cliente.
+
+  ENDLOOP.
+
+*  SELECT cpf, idcliente
+*    FROM zmft_cli_sa00
+*    FOR ALL ENTRIES IN gt_cliente
+*    WHERE       cpf EQ gt_cliente-cpf
+*      AND idcliente EQ gt_cliente-idccliente
+*      INTO TABLE @DATA(lt_result).
+*
+*  IF lt_result[] IS NOT INITAL.
+*  "// TRANSFERINDO O VALOR DA LINHA PARA UMA ESTRUTURA INTERNA
+*  LOOP AT gt_cliente INTO DATA(ls_cliente).
+*    ls_cliente-hralteracao = sy-uzeit.
+*    READ TABLE lt_result WITH KEY cpf = ls_cliente-cpf idcliente = lls_cliente-idcliente TRANSPORTING NO FIELDS.
+*    IF sy-subrc EQ 0.
+*      ls_cliente-hralteracao = sy-uzeit.
+*      MODIFY gt_cliente FROM ls_cliente.
+*    ENDIF.
+*  ENDLOOP.
+*
+*  "// PONTEIRO DIRETO PRA ÁREA E ALTERANDO DIRETAMENTE
+*  LOOP AT gt_cliente ASSIGNING FIELD-SYMBOL(<fs_cliente>).
+*    <fs_cliente>-hralteracao = sy-uzeit.
+*  ENDLOOP.
+*  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form save_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM save_data .
+
+  "INSERT
+
+  "UPDATE
+
+  "MODIFY ******* INSERT + UPDATE
+
+  DATA: ls_rel_out LIKE LINE OF gt_rel_output.
+
+  LOOP AT gt_cliente INTO DATA(ls_cliente).
+
+    MODIFY zmft_cli_sa00 FROM ls_cliente. "/(zmft_cli_sa00).
+    IF sy-subrc EQ 0. "// Comando efetuado com sucesso!
+      ls_rel_out-status   = 'S'.
+      ls_rel_out-cpf      = ls_cliente-cpf.
+      ls_rel_out-mensagem = 'Sucesso ao inserir/modificar registro!'.
+
+    ELSE. "// Tem algo muito errado nesse registro
+      ls_rel_out-status   = 'E'.
+      ls_rel_out-cpf      = ls_cliente-cpf.
+      ls_rel_out-mensagem = 'Erro ao inserir/modificar registro!'.
+
+    ENDIF.
+
+    APPEND ls_rel_out TO gt_rel_output.
+
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form display_info
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_info .
+
+  gt_fieldcat = VALUE slis_t_fieldcat_alv(
+        ( fieldname = 'STATUS' outputlen = 1 reptext_ddic = 'Status' )
+        ( fieldname = 'CPF' outputlen = 14 reptext_ddic = 'CPF' edit_mask = '___.___.___-__' )
+        ( fieldname = 'MENSAGEM' outputlen = 40 reptext_ddic = 'Mensagem' ) ).
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program     = sy-repid "Nome do programa em execução
+      i_callback_top_of_page = 'F_TOP_OF_PAGE' "Qual o from responsavel por montar o nosso cabeçalho
+      it_fieldcat            = gt_fieldcat "Layout do Grid
+    TABLES
+      t_outtab               = gt_rel_output "De onde vem a informação renderizada no grid
+    EXCEPTIONS
+      program_error          = 1
+      OTHERS                 = 2.
+
+ENDFORM.
+FORM f_top_of_page.
+
+***=> alv Header declarations
+  DATA: lt_header TYPE slis_t_listheader.
+
+  lt_header = VALUE slis_t_listheader( ( typ = 'H' info = 'Carga de Clientes' )
+                                       ( typ = 'A' info = 'MegaFood' )
+                                       ( typ = 'A' info = |Total de registros: { lines( gt_cliente ) } | )
+                                       ( typ = 'A' info = |Usuários: { sy-uname } | )
+                                       ( typ = 'A' info = |DATA: { sy-datum+6(2) }/{ sy-datum+4(2) }/{ sy-datum(4) } | )
+                                       ( typ = 'A' info = |Hora: { sy-uzeit+0(2) }:{ sy-uzeit+2(2) }:{ sy-uzeit+4(2) } | ) ).
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      it_list_commentary = lt_header
+      i_logo             = 'LOGOMFOOD'.
+
+ENDFORM.

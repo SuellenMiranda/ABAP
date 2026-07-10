@@ -1,0 +1,8 @@
+*&---------------------------------------------------------------------*
+*& Include          ZMFR_REL_CLIENTES_SA00_TOP
+*&---------------------------------------------------------------------*
+
+TABLES: zmft_cli_sa00.
+
+DATA: gt_clientes TYPE TABLE OF zmft_cli_sa00,
+      gt_fieldcat TYPE SLIS_T_FIELDCAT_ALV.

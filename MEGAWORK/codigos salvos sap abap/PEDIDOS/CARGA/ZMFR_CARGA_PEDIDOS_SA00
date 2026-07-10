@@ -1,0 +1,40 @@
+*&---------------------------------------------------------------------*
+*& Report ZMFR__CARGA_CLIENTES_SA00
+*&---------------------------------------------------------------------*
+*        MEGAWORK  - Relatório de Clientes
+*----------------------------------------------------------------------*
+* Autor......: Suellen Miranda Amorim                                  *
+* Data.......: 26/02/2025                                              *
+* Descrição  : Relatório para apuração da base de Clientes             *
+* Transação..: ZXXXXXX                                                 *
+*----------------------------------------------------------------------*
+*                      Histórico das modificaçãos                      *
+*----------------------------------------------------------------------*
+* Data        | Nome        | Request     | Descrição                  *
+*----------------------------------------------------------------------*
+* 26/02/2025  | SUELLEN     |             | DESENVOLVIMENTO inicial    *
+*----------------------------------------------------------------------*
+*Informações adicionais de regras da implementação                     *
+*----------------------------------------------------------------------*
+REPORT ZMFR_CARGA_CLIENTES_SA00.
+
+INCLUDE zmfr_carga_clientes_sa00_top. " Declaração de Variáveis
+INCLUDE zmfr_carga_clientes_sa00_src. " Screen Fields
+INCLUDE zmfr_carga_clientes_sa00_f01. " Forms (Rotinas de Execução)
+
+
+*----------------------------------------------------------------------*
+* AT SELECTION-SCREEN ON VALUE-REQUEST                                 *
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+PERFORM open_file.
+
+
+*----------------------------------------------------------------------*
+* START-OF-SELECTION(Comando)                                          *
+*----------------------------------------------------------------------*
+START-OF-SELECTION.
+PERFORM get_file.     "Recuperar o Arquivo
+PERFORM process_data. "Vai pegar o template e transferir para tabela interna de clientes
+PERFORM save_data.    "Gravar os clientes na base de dados
+PERFORM display_info. "Mostrar o resultado final

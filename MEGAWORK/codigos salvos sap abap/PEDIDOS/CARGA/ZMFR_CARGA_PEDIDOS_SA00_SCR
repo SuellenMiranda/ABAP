@@ -1,0 +1,10 @@
+*&---------------------------------------------------------------------*
+*& Include          ZMFR_CARGA_CLIENTES_SA00_SRC
+*&---------------------------------------------------------------------*
+
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-t01. "T01 Simbolo de Texto
+
+  PARAMETERS: p_file TYPE rlgrap-filename OBLIGATORY.
+
+SELECTION-SCREEN END OF BLOCK b1.

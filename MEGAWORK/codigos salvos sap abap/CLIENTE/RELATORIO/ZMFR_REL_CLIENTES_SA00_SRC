@@ -1,0 +1,22 @@
+*&---------------------------------------------------------------------*
+*& Include          ZMFR_REL_CLIENTES_SA00_SRC
+*&---------------------------------------------------------------------*
+************************************************************************
+* PARÂMETROS DE TELA:                                                  *
+*   SELECT OPTIONS (S_...)                                             *
+*   PARAMETERS     (P_...)                                             *
+*   CHECKBOX       (CB_...)                                            *
+*   RADIOBUTTON    (RB_...)                                            *
+************************************************************************
+*PARAMETER:      P_XXXX LIKE XXXX,            "DESCRIÇÃO DO PARÂMETRO
+*                CB_XXX AS CHECKBOX,          "DESCRIÇÃO DO CHECKBOX
+*                RB_XXX RADIOBUTTON GROUP G1. "DESCRIÇÃO DO RADIOOBUTTON
+*SELECT-OPTIONS: S_XXX FOR XXXX-XXXX          "DESCRIÇÃO DO PARÂMETRO
+
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-t01.
+
+  SELECT-OPTIONS: s_cpf FOR zmft_cli_sa00-cpf. "Preciso expor essa tabela para o meu select options
+  PARAMETERS p_cpf TYPE stcd2.
+
+SELECTION-SCREEN END OF BLOCK b1.

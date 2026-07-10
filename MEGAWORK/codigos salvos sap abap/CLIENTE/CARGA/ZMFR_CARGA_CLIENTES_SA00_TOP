@@ -1,0 +1,44 @@
+*&---------------------------------------------------------------------*
+*& Include          ZMFR_CARGA_CLIENTES_SA00_TOP
+*&---------------------------------------------------------------------*
+
+TYPES: BEGIN OF ty_template,
+         col_a(11)  TYPE c, "Tipo 'c' = 'CHAR'
+         col_b(10)  TYPE c,
+         col_c(255) TYPE c,
+         col_d(10)  TYPE c,
+         col_e(1)   TYPE c,
+       END OF ty_template.
+
+
+TYPES: BEGIN OF ty_rel_output,
+        status    TYPE char1,
+        cpf       TYPE stcd2,
+        mensagem  TYPE char255,
+       END OF ty_rel_output.
+
+************************************************************************
+* TABELA INTERNA:                                                      *
+*   GLOBAL          (GT_...)                                           *
+*   LOCAL           (LT_...)                                           *
+************************************************************************
+DATA: gt_cliente      TYPE TABLE OF zmft_cli_sa00,
+      gt_template     TYPE TABLE OF ty_template,
+      gt_rel_output   TYPE TABLE OF ty_rel_output,
+      gt_fieldcat     TYPE slis_t_fieldcat_alv.
+
+
+************************************************************************
+*   ESTRUTURAS GLOBAIS        (GS...)                                  *
+*   ESTRUTURAS LOCAIS         (LS...)                                  *
+************************************************************************
+***DATA:
+***  GS_XXXXX TYPE  TY_XXXXX.
+***  LS_XXXX  TYPE  TY_XXXXX.
+
+
+************************************************************************
+* CONSTANTES          (C_...)                                          *
+************************************************************************
+***CONSTANTES:
+***  C_..   "DESCRIÇÃO DA CONSTANTE                                    *

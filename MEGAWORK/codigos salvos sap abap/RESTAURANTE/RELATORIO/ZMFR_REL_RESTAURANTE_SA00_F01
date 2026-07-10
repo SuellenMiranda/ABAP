@@ -1,0 +1,123 @@
+*&---------------------------------------------------------------------*
+*& Include          ZMFR_REL_CLIENTES_SA00_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form f_select_clientes
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM f_select_clientes .
+
+  IF p_cpf IS NOT INITIAL.
+    SELECT * "Selecione esses campos (no ambiente real cite exatamente os campos que voce precisa
+    FROM zmft_cli_sa00 "Nessa tabela
+    WHERE
+      cpf EQ @p_cpf "Situação com parametro de entrada  ('EQ' = '=' | 'NE' = '<>')
+    INTO TABLE @gt_clientes. "Jogue o valor nesse campo/estrutura/tabela
+  ELSE.
+    SELECT * "Selecione esses campos (no ambiente real cite exatamente os campos que voce precisa
+    FROM zmft_cli_sa00 "Nessa tabela
+    WHERE
+      cpf IN @s_cpf "Onde essa clausula de atenda
+    INTO TABLE @gt_clientes. "Jogue o valor nesse campo/estrutura/tabela
+  ENDIF.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form f_create_fcat
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM f_create_fcat .
+  "ATIVIDADE: PREENCHER COM AS INFORMAÇÕES DAS DEMAIS COLUNAS
+
+  gt_fieldcat = VALUE slis_t_fieldcat_alv(
+        ( fieldname = 'CPF' outputlen = 14 reptext_ddic = 'CPF' edit_mask = '___.___.___-__' )
+        ( fieldname = 'IDCLIENTE' outputlen = 10 reptext_ddic = 'ID do Cliente' )
+        ( fieldname = 'NOME' outputlen = 40 reptext_ddic = 'Nome' )
+        ( fieldname = 'DTNASCIMENTO' outputlen = 8 reptext_ddic = 'Data de Nascimento' )
+        ( fieldname = 'INATIVO' outputlen = 1 reptext_ddic = 'Registro Inativo?' checkbox = abap_true )
+        ( fieldname = 'USRCRIACAO' outputlen = 12 reptext_ddic = 'Usuário de Criação' )
+        ( fieldname = 'DTCRIACAO' outputlen = 8 reptext_ddic = 'Data de Criação' )
+        ( fieldname = 'HRCRIACAO' outputlen = 6 reptext_ddic = 'Hora de Criação' )
+        ( fieldname = 'USRALTERACAO' outputlen = 12 reptext_ddic = 'Usuário de Alteração' )
+        ( fieldname = 'DTALTERACAO' outputlen = 8 reptext_ddic = 'Data de Alteração' )
+        ( fieldname = 'HRALTERACAO' outputlen = 6 reptext_ddic = 'Hora de Alteração' ) ).
+
+
+
+*  CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
+*    EXPORTING
+*      i_structure_name       = 'ZMFT_CLI_SA00'
+*    changing
+*      ct_fieldcat            = gt_fieldcat "De onde vem a informação renderizada no grid
+*    EXCEPTIONS
+*      inconsistent_interface = 1
+*      program_error          = 2
+*      OTHERS                 = 3.
+*
+*  LOOP AT gt_fieldcat ASSIGNING FIELD-SYMBOL(<fs_fieldcat>).
+*
+*    IF <fs_fieldcat>-fieldname EQ 'NOME'.
+*      <fs_fieldcat>-outputlen = '40'.
+*    ENDIF.
+*
+*  ENDLOOP.
+
+ENDFORM.
+
+
+
+*&---------------------------------------------------------------------*
+*& Form f_display_alvl
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM f_display_alvl.
+
+  "DATA: gt_fieldcat TYPE slis_t_fieldcat_alv.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program     = sy-repid "Nome do programa em execução
+      i_callback_top_of_page = 'F_TOP_OF_PAGE' "Qual o from responsavel por montar o nosso cabeçalho
+      it_fieldcat            = gt_fieldcat "Layout do Grid
+    TABLES
+      t_outtab               = gt_clientes "De onde vem a informação renderizada no grid
+    EXCEPTIONS
+      program_error          = 1
+      OTHERS                 = 2.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form f_display_alvl
+*&---------------------------------------------------------------------*
+FORM f_top_of_page.
+
+***=> alv Header declarations
+  DATA: lt_header TYPE slis_t_listheader.
+
+  lt_header = VALUE slis_t_listheader( ( typ = 'H' info = 'Relatório de Clientes' )
+                                       ( typ = 'A' info = 'MegaFood' )
+                                       ( typ = 'A' info = |Total de registros: { lines( gt_clientes ) } | )
+                                       ( typ = 'A' info = |Usuários: { sy-uname } | )
+                                       ( typ = 'A' info = |DATA: { sy-datum+6(2) }/{ sy-datum+4(2) }/{ sy-datum(4) } | )
+                                       ( typ = 'A' info = |Hora: { sy-uzeit+0(2) }:{ sy-uzeit+2(2) }:{ sy-uzeit+4(2) } | ) ).
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      it_list_commentary = lt_header
+      i_logo             = 'LOGOMFOOD'.
+
+ENDFORM.
